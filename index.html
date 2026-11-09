@@ -678,6 +678,30 @@
                             </label>
                         </div>
                     </div>
+
+                    <!-- Factory Reset & Cache Clear Card -->
+                    <div class="reset-app-card" style="margin-top:14px;">
+                        <div style="background:rgba(220, 38, 38, 0.07);border:1px solid rgba(220, 38, 38, 0.3);border-radius:var(--radius-md);padding:14px 18px;">
+                            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+                                <div style="display:flex;align-items:flex-start;gap:12px;flex:1;min-width:240px;">
+                                    <span data-icon="alert" data-icon-size="22" style="color:#ef4444;margin-top:2px;"></span>
+                                    <div>
+                                        <h4 style="font-size:0.92rem;font-weight:700;margin:0 0 4px 0;color:#ef4444;">حذف تمامی کش و شروع از نو</h4>
+                                        <p style="font-size:0.75rem;color:#a0a0a0;margin:0;line-height:1.5;">
+                                            پاک‌سازی کامل حافظه و کش مرورگر، تخلیه اطلاعات data.json و بازگردانی تنظیمات به حالت خام اولیه
+                                        </p>
+                                    </div>
+                                </div>
+                                <button type="button" id="btnFactoryReset" class="btn" style="background:#ef4444;color:#ffffff;border:none;font-size:0.78rem;font-weight:700;padding:8px 16px;">
+                                    <span class="btn-spinner"></span>
+                                    <span class="btn-content" style="display:flex;align-items:center;gap:6px;">
+                                        <span data-icon="close" data-icon-size="16"></span>
+                                        <span>ریست کامل سامانه</span>
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Tab 3: System Logs & Error History -->
@@ -701,7 +725,7 @@
 
             <div class="modal-footer" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
                 <div style="display:flex;align-items:center;gap:12px;font-size:0.75rem;color:var(--text-muted);">
-                    <span>نسخه: <strong id="settingsVersionText" style="color:#888888;font-weight:700;">v2.5.0</strong></span>
+                    <span>نسخه: <strong id="settingsVersionText" style="color:#888888;font-weight:700;">v2.6.0</strong></span>
                     <span style="opacity:0.3;">|</span>
                     <span style="font-family:sans-serif;letter-spacing:0.5px;color:#777777;font-size:0.72rem;direction:ltr;">DEVELOPED BY MAHDYAR SHAHPARI x Gemini - 2026</span>
                 </div>
@@ -843,7 +867,48 @@
         </div>
     </div>
 
-    <!-- Advanced Multi-Type Toast Notification Container -->
+    <!-- Modal: Factory Reset & Clear All Cache Confirmation -->
+    <div id="factoryResetModal" class="modal-overlay">
+        <div class="modal-container" style="max-width:520px;">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span data-icon="alert" data-icon-size="22" style="color:#ef4444;"></span>
+                    <span style="color:#ef4444;">تایید حذف تمامی کش و شروع از نو</span>
+                </div>
+                <button class="modal-close-btn" data-close-modal data-tooltip="بستن">
+                    <span data-icon="close" data-icon-size="18"></span>
+                </button>
+            </div>
+            <div class="modal-body" style="padding-bottom:14px;">
+                <p style="font-size:0.92rem;color:#ffffff;line-height:1.7;margin-bottom:12px;font-weight:700;">
+                    آیا از بازنشانی کامل سامانه و شروع از نو اطمینان دارید؟
+                </p>
+                <div style="background:#141414;border:1px solid #282828;border-radius:8px;padding:12px 14px;margin-bottom:14px;">
+                    <ul style="margin:0;padding-right:18px;font-size:0.8rem;color:#b5b5b5;line-height:1.8;">
+                        <li>کلیه کش‌ها، حافظه محلی مرورگر و سشن‌ها پاک‌سازی خواهند شد.</li>
+                        <li>مشخصات ثبت‌شده در فایل پایگاه داده <code>data.json</code> تخلیه و ریست می‌شود.</li>
+                        <li>رمز عبور و مشخصات مدیر به حالت پیش‌فرض کارخانه بازمی‌گردد.</li>
+                        <li style="color:#ef4444;font-weight:700;">فایل‌های اصلی ویدیویی درون پوشه <code>VIDEOS</code> کاملاً حفظ می‌شوند و حذف نخواهند شد.</li>
+                    </ul>
+                </div>
+                <p style="font-size:0.78rem;color:var(--text-secondary);line-height:1.6;margin:0;">
+                    پس از تایید، کلیه تنظیمات ریست شده و صفحه به طور خودکار بازنشانی می‌گردد.
+                </p>
+            </div>
+            <div class="modal-footer" style="justify-content:space-between;gap:12px;">
+                <button type="button" class="btn btn-outline" data-close-modal style="flex:1;">
+                    <span class="btn-content">انصراف</span>
+                </button>
+                <button type="button" id="btnConfirmFactoryReset" class="btn btn-primary" style="flex:1;background:#ef4444;border-color:#ef4444;color:#ffffff;">
+                    <span class="btn-spinner"></span>
+                    <span class="btn-content" style="display:flex;align-items:center;justify-content:center;gap:6px;">
+                        <span data-icon="close" data-icon-size="16"></span>
+                        <span>بله، پاک‌سازی کامل و ریست</span>
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
     <div id="toastContainer" class="toast-container"></div>
 
     <!-- JavaScript Files -->

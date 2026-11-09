@@ -93,7 +93,7 @@ def sync_videos_folder():
 
     data = {
         "systemName": "خانواده من",
-        "version": "2.5.0",
+        "version": "2.6.0",
         "masterPassword": "1234",
         "defaultEditorName": "مدیر سیستم",
         "videos": []
@@ -315,6 +315,30 @@ class RangeHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_json({"status": "success", "message": "اطلاعات با موفقیت در data.json ذخیره شد."})
             except Exception as e:
                 self.send_json({"status": "error", "message": f"خطا در ذخیره فایل: {str(e)}"}, status_code=500)
+            return
+
+        if parsed.path == '/api/reset':
+            try:
+                clean_data = {
+                    "systemName": "خانواده من",
+                    "version": "2.6.0",
+                    "masterPassword": "1234",
+                    "defaultEditorName": "مدیر سیستم",
+                    "videos": []
+                }
+                with open(DATA_FILE, 'w', encoding='utf-8') as f:
+                    json.dump(clean_data, f, ensure_ascii=False, indent=2)
+                if os.path.exists(THUMBNAILS_DIR):
+                    for item in os.listdir(THUMBNAILS_DIR):
+                        p = os.path.join(THUMBNAILS_DIR, item)
+                        if os.path.isfile(p) and not item.startswith('.'):
+                            try:
+                                os.remove(p)
+                            except Exception:
+                                pass
+                self.send_json({"status": "success", "message": "سامانه با موفقیت به حالت اولیه ریست شد."})
+            except Exception as e:
+                self.send_json({"status": "error", "message": f"خطا در ریست سامانه: {str(e)}"}, status_code=500)
             return
 
         if parsed.path == '/api/backup':

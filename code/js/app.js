@@ -13,7 +13,7 @@
 (function() {
     'use strict';
 
-    var APP_VERSION = '2.5.0';
+    var APP_VERSION = '2.6.0';
     var STORAGE_DATA_KEY = 'family_pics_database';
     var STORAGE_AUTH_KEY = 'family_pics_master_pin';
     var STORAGE_USER_KEY = 'family_pics_editor_name';
@@ -1951,6 +1951,93 @@
                     }
                 }
             });
+        }
+
+        // Factory Reset & Clear All Cache Button Handlers
+        var btnFactoryReset = document.getElementById('btnFactoryReset');
+        var btnConfirmFactoryReset = document.getElementById('btnConfirmFactoryReset');
+        var factoryResetModal = document.getElementById('factoryResetModal');
+
+        if (btnFactoryReset) {
+            btnFactoryReset.addEventListener('click', function() {
+                if (factoryResetModal) openModal(factoryResetModal);
+            });
+        }
+
+        if (btnConfirmFactoryReset) {
+            btnConfirmFactoryReset.addEventListener('click', function() {
+                executeFactoryReset();
+            });
+        }
+    }
+
+    /**
+     * Factory Reset: Clear all cache, localStorage, sessionStorage, IndexedDB,
+     * reset data.json to factory empty state, and restart application.
+     */
+    async function executeFactoryReset() {
+        var btnConfirm = document.getElementById('btnConfirmFactoryReset');
+        setButtonLoading(btnConfirm, true);
+
+        try {
+            var cleanPayload = {
+                systemName: 'خانواده من',
+                version: APP_VERSION,
+                masterPassword: '1234',
+                defaultEditorName: 'مدیر سیستم',
+                videos: []
+            };
+
+            // 1. Reset data.json via server API or stored file handle
+            if (window.location.protocol.indexOf('http') === 0) {
+                try {
+                    await fetch('/api/reset', { method: 'POST' });
+                } catch (e) {
+                    await saveDataToJsonFile(cleanPayload);
+                }
+            } else {
+                try {
+                    await saveDataToJsonFile(cleanPayload);
+                } catch (e) {
+                    console.warn('Factory reset data.json write error:', e);
+                }
+            }
+
+            // 2. Revoke all active object URLs
+            if (appState.videoBlobs) {
+                Object.keys(appState.videoBlobs).forEach(function(k) {
+                    try { URL.revokeObjectURL(appState.videoBlobs[k]); } catch(e) {}
+                });
+            }
+
+            // 3. Clear all browser storage
+            localStorage.clear();
+            sessionStorage.clear();
+
+            // 4. Delete IndexedDB database
+            if (window.indexedDB) {
+                try {
+                    indexedDB.deleteDatabase('family_pics_idb');
+                } catch (idbE) {}
+            }
+
+            // 5. Clear system logs
+            if (window.AppLogger) {
+                window.AppLogger.clearLogs();
+            }
+            if (window.location.protocol.indexOf('http') === 0) {
+                fetch('/api/logs/clear', { method: 'POST' }).catch(function() {});
+            }
+
+            showToast('کلیه اطلاعات و کش سامانه پاک شد. در حال شروع مجدد...', 'success');
+
+            setTimeout(function() {
+                window.location.reload();
+            }, 600);
+        } catch (err) {
+            console.error('Factory reset error:', err);
+            setButtonLoading(btnConfirm, false);
+            showToast('خطا در پاک‌سازی: ' + (err.message || err), 'error');
         }
     }
 

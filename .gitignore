@@ -1,0 +1,54 @@
+# ========================================================
+# Git Ignore Rules for "Family Pics" (سامانه خانواده من)
+# ========================================================
+
+# Operating System files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+
+# Editor & IDE directories
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+
+# Python temporary files & caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.env
+venv/
+.venv/
+env/
+
+# Personal heavy media files inside VIDEOS/
+VIDEOS/*.mp4
+VIDEOS/*.mkv
+VIDEOS/*.webm
+VIDEOS/*.mov
+VIDEOS/*.avi
+VIDEOS/*.m4v
+VIDEOS/*.wmv
+VIDEOS/*.flv
+
+# Keep structure intact
+!VIDEOS/.gitkeep
+!**/thumbnails/.gitkeep
+!**/logs/.gitkeep
+!**/logs/app.log
+
+# System logs
+**/logs/*.log.*
+
+# Temporary and local backup files
+*.tmp
+*.bak
+local_secrets.json

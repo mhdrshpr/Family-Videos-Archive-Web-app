@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>خانواده من - آرشیو ویدئوهای خانوادگی</title>
+    <link rel="icon" type="image/svg+xml" href="code/favicon.svg">
+    <link rel="stylesheet" href="code/css/style.css">
+    <script src="code/js/data_bundle.js"></script>
+    <script src="code/js/logger.js"></script>
+</head>
+<body>
+
+    <!-- Header & Navigation Bar (Becomes Floating Bottom Nav on Mobile) -->
+    <header class="app-header">
+        <div class="header-container">
+            <a href="index.html" class="brand" data-tooltip="صفحه اصلی آرشیو ویدئوهای خانواده من">
+                <div class="brand-icon" data-icon="logo" data-icon-size="40"></div>
+                <div class="brand-text">
+                    <h1>خانواده من</h1>
+                </div>
+            </a>
+
+            <div class="header-actions">
+                <!-- 1. Sync & Save Button (Saves to data.json & Scans Reference Folder) -->
+                <button id="btnSyncVideos" class="btn btn-primary" data-tooltip="ذخیره اطلاعات در data.json و همگام‌سازی ویدئوهای پوشه مرجع">
+                    <span class="btn-spinner"></span>
+                    <span class="btn-content" style="display:flex;align-items:center;gap:6px;">
+                        <span data-icon="sync" data-icon-size="18"></span>
+                        <span>همگام‌سازی و ذخیره</span>
+                    </span>
+                </button>
+
+                <!-- 2. Register Reference Directory Button (Select Directory Picker) -->
+                <div class="register-folder-wrapper" style="position:relative;display:inline-flex;">
+                    <button id="btnRegisterFolder" class="btn btn-outline" data-tooltip="انتخاب و ثبت پوشه مرجع ویدئوها در مرورگر">
+                        <span class="btn-spinner"></span>
+                        <span class="btn-content" style="display:flex;align-items:center;gap:6px;">
+                            <span data-icon="folder" data-icon-size="18"></span>
+                            <span id="btnRegisterFolderText">ثبت پوشه مرجع</span>
+                        </span>
+                    </button>
+                    <!-- Pointer Arrow to Register Folder Button when folder unassigned -->
+                    <div id="folderRegisterArrow" class="folder-register-arrow-tip hidden">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 20V4M5 11l7-7 7 7" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>ابتدا پوشه VIDEOS را ثبت کنید</span>
+                    </div>
+                </div>
+                <input type="file" id="folderInput" webkitdirectory directory multiple style="display:none;">
+
+                <!-- Backup JSON Button -->
+                <button id="btnBackup" class="btn btn-outline" data-tooltip="دریافت خروجی پشتیبان در فایل BACKUP.JSON (بدون رمز)">
+                    <span class="btn-spinner"></span>
+                    <span class="btn-content" style="display:flex;align-items:center;gap:6px;">
+                        <span data-icon="backup" data-icon-size="18"></span>
+                        <span>پشتیبان‌گیری</span>
+                    </span>
+                </button>
+
+                <!-- Restore JSON Button -->
+                <button id="btnRestoreTrigger" class="btn btn-outline" data-tooltip="بازیابی اطلاعات از فایل پشتیبان BACKUP.JSON">
+                    <span class="btn-spinner"></span>
+                    <span class="btn-content" style="display:flex;align-items:center;gap:6px;">
+                        <span data-icon="restore" data-icon-size="18"></span>
+                        <span>بازیابی</span>
+                    </span>
+                </button>
+                <input type="file" id="fileRestore" accept=".json,application/json" style="display:none;">
+
+                <!-- Settings & Stats Modal Button -->
+                <button id="btnOpenSettings" class="btn btn-outline" data-tooltip="تنظیمات سامانه، آمار فضای ذخیره‌سازی و تغییر رمز عبور">
+                    <span class="btn-content" style="display:flex;align-items:center;gap:6px;">
+                        <span data-icon="settings" data-icon-size="18"></span>
+                        <span>تنظیمات و آمار</span>
+                    </span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="app-main" id="videoSection">
+
+        <!-- Top Brand Title Bar -->
+        <div class="top-brand-bar">
+            <div class="brand">
+                <div class="brand-icon" data-icon="logo" data-icon-size="40"></div>
+                <div class="brand-text">
+                    <h1>خانواده من</h1>
+                </div>
+            </div>
+        </div>
+
+        <!-- Locked / Verification Notice Banner -->
+        <div id="folderRequiredBanner" class="folder-required-banner hidden">
+            <div style="display:flex;align-items:center;gap:12px;">
+                <div data-icon="folder" data-icon-size="24"></div>
+                <div>
+                    <h3 style="font-size:0.95rem;font-weight:800;margin-bottom:2px;color:#ffffff;">برای مشاهده و پخش ویدئوها، ثبت پوشه VIDEOS الزامی است</h3>
+                    <p style="font-size:0.8rem;color:#b0b0b0;margin:0;">جهت تایید اصالت ویدئوها، پخش روان و استخراج فریم‌ها، اتصال به پوشه VIDEOS الزامی است.</p>
+                </div>
+            </div>
+            <button id="btnBannerConnectFolder" class="btn btn-primary" style="font-size:0.82rem;padding:8px 16px;flex-shrink:0;">
+                <span class="btn-content">ثبت و اتصال پوشه VIDEOS</span>
+            </button>
+        </div>
+
+        <!-- Notification Banner for Videos with Missing Information -->
+        <div id="alertBanner" class="alert-banner hidden">
+            <div class="alert-content">
+                <div class="alert-icon-box" data-icon="alert" data-icon-size="22"></div>
+                <div class="alert-text">
+                    <h3>اطلاعیه تکمیل مشخصات ویدئوها</h3>
+                    <p>تعداد <strong id="alertCount">۰</strong> فایل ویدئویی هنوز نام، توضیحات یا سال ثبت شده ندارند. لطفاً اطلاعات آنها را تکمیل فرمایید.</p>
+                </div>
+            </div>
+            <div class="alert-actions">
+                <button id="btnViewIncomplete" class="btn btn-primary" style="font-size:0.8rem;padding:7px 14px;" data-tooltip="فیلتر سریع ویدئوهایی که هنوز اطلاعات آنها کامل نیست">
+                    <span class="btn-content">مشاهده ویدئوهای نیازمند تکمیل</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Wrap controls & grid for VIDEOS folder verification blur effect -->
+        <div id="lockedContentWrap">
+            <!-- Controls: Search, Filters, Sort -->
+            <section class="controls-card">
+            <!-- Search Box -->
+            <div class="search-box">
+                <span class="search-icon" data-icon="search" data-icon-size="18"></span>
+                <input type="text" id="searchInput" class="search-input" placeholder="جستجو بر اساس نام فیلم، تگ، نام ویرایش‌کننده، سال یا توضیحات...">
+            </div>
+
+            <!-- Filters & Sorting Group -->
+            <div class="filters-group">
+                <!-- Status Filter -->
+                <div class="select-wrapper">
+                    <select id="filterStatus" class="custom-select" data-tooltip="فیلتر بر اساس وضعیت تکمیل بودن اطلاعات">
+                        <option value="all">همه وضعیت‌ها</option>
+                        <option value="complete">فقط تکمیل‌شده</option>
+                        <option value="incomplete">نیازمند تکمیل اطلاعات</option>
+                    </select>
+                    <span class="select-icon" data-icon="status" data-icon-size="16"></span>
+                </div>
+
+                <!-- Year Filter -->
+                <div class="select-wrapper">
+                    <select id="filterYear" class="custom-select" data-tooltip="فیلتر بر اساس سال ضبط ویدئو">
+                        <option value="all">همه سال‌ها</option>
+                    </select>
+                    <span class="select-icon" data-icon="calendar" data-icon-size="16"></span>
+                </div>
+
+                <!-- Tag Filter -->
+                <div class="select-wrapper">
+                    <select id="filterTag" class="custom-select" data-tooltip="فیلتر بر اساس دسته‌بندی‌ها و تگ‌ها">
+                        <option value="all">همه دسته‌ها و تگ‌ها</option>
+                    </select>
+                    <span class="select-icon" data-icon="tag" data-icon-size="16"></span>
+                </div>
+
+                <!-- Sort Order -->
+                <div class="select-wrapper">
+                    <select id="sortSelect" class="custom-select" data-tooltip="تغییر ترتیب نمایش ویدئوها">
+                        <option value="date-desc">جدیدترین زمان ثبت</option>
+                        <option value="date-asc">قدیمی‌ترین زمان ثبت</option>
+                        <option value="year-desc">بر اساس سال (جدیدتر)</option>
+                        <option value="name-asc">نام فیلم (الف - ی)</option>
+                        <option value="name-desc">نام فیلم (ی - الف)</option>
+                        <option value="duration-desc">طولانی‌ترین مدت زمان</option>
+                        <option value="duration-asc">کوتاه‌ترین مدت زمان</option>
+                    </select>
+                    <span class="select-icon" data-icon="sort" data-icon-size="16"></span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Status & Counter Bar -->
+        <div class="status-bar">
+            <div class="status-counter">
+                نمایش <strong id="shownCount">۰</strong> از مجموع <strong id="totalCount">۰</strong> ویدئو
+            </div>
+            <div style="font-size:0.8rem;color:var(--text-muted);">
+                پوشه منبع: VIDEOS
+            </div>
+        </div>
+
+        <!-- 1:1 Pixel-Matched Skeleton Loading Grid -->
+        <div id="skeletonGrid" class="video-grid" style="display:grid;">
+            <!-- Skeleton Card 1 -->
+            <div class="skeleton-card">
+                <div class="skeleton-thumb skeleton-shimmer"></div>
+                <div class="skeleton-body">
+                    <div class="skeleton-title-row">
+                        <div class="skeleton-line skeleton-shimmer" style="height:22px;width:65%;"></div>
+                        <div class="skeleton-line skeleton-shimmer" style="height:22px;width:20%;border-radius:var(--radius-sm);"></div>
+                    </div>
+                    <div class="skeleton-line skeleton-shimmer" style="height:12px;width:45%;"></div>
+                    <div class="skeleton-line skeleton-shimmer" style="height:14px;width:95%;"></div>
+                    <div class="skeleton-line skeleton-shimmer" style="height:14px;width:75%;"></div>
+                    <div class="skeleton-meta-box">
+                        <div class="skeleton-line skeleton-shimmer" style="height:24px;width:48%;border-radius:6px;"></div>
+                        <div style="display:flex;gap:6px;">
+                            <div class="skeleton-line skeleton-shimmer" style="height:22px;width:55px;border-radius:999px;"></div>
+                            <div class="skeleton-line skeleton-shimmer" style="height:22px;width:70px;border-radius:999px;"></div>
+                            <div class="skeleton-line skeleton-shimmer" style="height:22px;width:50px;border-radius:999px;"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-actions-row">
+                        <div class="skeleton-line skeleton-shimmer" style="height:36px;width:115px;border-radius:var(--radius-md);"></div>
+                        <div style="display:flex;gap:6px;">
+                            <div class="skeleton-line skeleton-shimmer" style="height:36px;width:36px;border-radius:var(--radius-md);"></div>
+                            <div class="skeleton-line skeleton-shimmer" style="height:36px;width:36px;border-radius:var(--radius-md);"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Skeleton Card 2 -->
+            <div class="skeleton-card">
+                <div class="skeleton-thumb skeleton-shimmer"></div>
+                <div class="skeleton-body">
+                    <div class="skeleton-title-row">
+                        <div class="skeleton-line skeleton-shimmer" style="height:22px;width:65%;"></div>
+                        <div class="skeleton-line skeleton-shimmer" style="height:22px;width:20%;border-radius:var(--radius-sm);"></div>
+                    </div>
+                    <div class="skeleton-line skeleton-shimmer" style="height:12px;width:45%;"></div>
+                    <div class="skeleton-line skeleton-shimmer" style="height:14px;width:95%;"></div>
+                    <div class="skeleton-line skeleton-shimmer" style="height:14px;width:75%;"></div>
+                    <div class="skeleton-meta-box">
+                        <div class="skeleton-line skeleton-shimmer" style="height:24px;width:48%;border-radius:6px;"></div>
+                        <div style="display:flex;gap:6px;">
+                            <div class="skeleton-line skeleton-shimmer" style="height:22px;width:55px;border-radius:999px;"></div>
+                            <div class="skeleton-line skeleton-shimmer" style="height:22px;width:70px;border-radius:999px;"></div>
+                            <div class="skeleton-line skeleton-shimmer" style="height:22px;width:50px;border-radius:999px;"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-actions-row">
+                        <div class="skeleton-line skeleton-shimmer" style="height:36px;width:115px;border-radius:var(--radius-md);"></div>
+                        <div style="display:flex;gap:6px;">
+                            <div class="skeleton-line skeleton-shimmer" style="height:36px;width:36px;border-radius:var(--radius-md);"></div>
+                            <div class="skeleton-line skeleton-shimmer" style="height:36px;width:36px;border-radius:var(--radius-md);"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Skeleton Card 3 -->
+            <div class="skeleton-card">
+                <div class="skeleton-thumb skeleton-shimmer"></div>
+                <div class="skeleton-body">
+                    <div class="skeleton-title-row">
+                        <div class="skeleton-line skeleton-shimmer" style="height:22px;width:65%;"></div>
+                        <div class="skeleton-line skeleton-shimmer" style="height:22px;width:20%;border-radius:var(--radius-sm);"></div>
+                    </div>
+                    <div class="skeleton-line skeleton-shimmer" style="height:12px;width:45%;"></div>
+                    <div class="skeleton-line skeleton-shimmer" style="height:14px;width:95%;"></div>
+                    <div class="skeleton-line skeleton-shimmer" style="height:14px;width:75%;"></div>
+                    <div class="skeleton-meta-box">
+                        <div class="skeleton-line skeleton-shimmer" style="height:24px;width:48%;border-radius:6px;"></div>
+                        <div style="display:flex;gap:6px;">
+                            <div class="skeleton-line skeleton-shimmer" style="height:22px;width:55px;border-radius:999px;"></div>
+                            <div class="skeleton-line skeleton-shimmer" style="height:22px;width:70px;border-radius:999px;"></div>
+                            <div class="skeleton-line skeleton-shimmer" style="height:22px;width:50px;border-radius:999px;"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-actions-row">
+                        <div class="skeleton-line skeleton-shimmer" style="height:36px;width:115px;border-radius:var(--radius-md);"></div>
+                        <div style="display:flex;gap:6px;">
+                            <div class="skeleton-line skeleton-shimmer" style="height:36px;width:36px;border-radius:var(--radius-md);"></div>
+                            <div class="skeleton-line skeleton-shimmer" style="height:36px;width:36px;border-radius:var(--radius-md);"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Real Video Cards Grid -->
+        <div id="videoGrid" class="video-grid" style="display:none;"></div>
+        </div>
+
+    </main>
+
+    <!-- Modal 1: Setup Initial Master PIN & Name (First Launch) -->
+    <div id="setupPinModal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span data-icon="lock" data-icon-size="20"></span>
+                    <span>تعریف مشخصات و رمز عبور ویرایش</span>
+                </div>
+            </div>
+            <form id="setupPinForm">
+                <div class="modal-body">
+                    <p style="font-size:0.86rem;color:var(--text-secondary);margin-bottom:18px;line-height:1.6;">
+                        به سامانه «خانواده من» خوش آمدید. برای محافظت از اطلاعات و ثبت نام ویرایش‌کننده روی فیلم‌ها، لطفاً نام خود و یک رمز عبور تعیین فرمایید.
+                    </p>
+                    <div class="form-group">
+                        <label class="form-label" for="setupEditorName"><span style="color:#ef4444;margin-left:4px;font-weight:bold;">*</span>نام شما (ویرایش‌کننده):</label>
+                        <input type="text" id="setupEditorName" class="form-input" placeholder="مثال: مهدیار یا پدر">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="newPinInput"><span style="color:#ef4444;margin-left:4px;font-weight:bold;">*</span>رمز عبور ویرایش:</label>
+                        <div class="password-input-group">
+                            <input type="password" id="newPinInput" class="form-input" placeholder="حداقل ۴ رقم" autocomplete="new-password">
+                            <button type="button" class="btn-toggle-password" data-target="newPinInput" data-tooltip="نمایش / مخفی‌سازی رمز عبور" aria-label="نمایش رمز عبور">
+                                <span class="eye-icon" data-icon="eye" data-icon-size="18"></span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="newPinConfirm"><span style="color:#ef4444;margin-left:4px;font-weight:bold;">*</span>تکرار رمز عبور:</label>
+                        <div class="password-input-group">
+                            <input type="password" id="newPinConfirm" class="form-input" placeholder="تکرار رمز عبور" autocomplete="new-password">
+                            <button type="button" class="btn-toggle-password" data-target="newPinConfirm" data-tooltip="نمایش / مخفی‌سازی رمز عبور" aria-label="نمایش رمز عبور">
+                                <span class="eye-icon" data-icon="eye" data-icon-size="18"></span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-hint">رمز عبور تعریف شده، پشتیبان گیری نمی شود. رمز جدید را باید در هنگام اضافه کردن اطلاعات (بازیابی)  تعریف کنید</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary" style="width:100%;">
+                        <span class="btn-spinner"></span>
+                        <span class="btn-content">ثبت و شروع کار با سامانه</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 2: PIN Verification Prompt -->
+    <div id="pinModal" class="modal-overlay">
+        <div class="modal-container" style="max-width:420px;">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span data-icon="key" data-icon-size="20"></span>
+                    <span>احراز هویت جهت ویرایش</span>
+                </div>
+                <button class="modal-close-btn" data-close-modal data-tooltip="بستن">
+                    <span data-icon="close" data-icon-size="18"></span>
+                </button>
+            </div>
+            <form id="verifyPinForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label" for="verifyPinInput">رمز عبور ویرایش را وارد کنید:</label>
+                        <div class="password-input-group">
+                            <input type="password" id="verifyPinInput" class="form-input" placeholder="رمز عبور...">
+                            <button type="button" class="btn-toggle-password" data-target="verifyPinInput" data-tooltip="نمایش / مخفی‌سازی رمز عبور" aria-label="نمایش رمز عبور">
+                                <span class="eye-icon" data-icon="eye" data-icon-size="18"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" data-close-modal>
+                        <span class="btn-content">انصراف</span>
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <span class="btn-spinner"></span>
+                        <span class="btn-content">تایید و ادامه</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 3: Edit Video Information, Thumbnail & Tags -->
+    <div id="editModal" class="modal-overlay">
+        <div class="modal-container" style="max-width:600px;">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span data-icon="edit" data-icon-size="20"></span>
+                    <span>ویرایش مشخصات و دسته‌بندی ویدئو</span>
+                </div>
+                <button class="modal-close-btn" data-close-modal data-tooltip="بستن">
+                    <span data-icon="close" data-icon-size="18"></span>
+                </button>
+            </div>
+            <form id="editVideoForm">
+                <div class="modal-body">
+                    <!-- 6. Locked Filename in Reference -->
+                    <div class="form-group">
+                        <label class="form-label" style="display:flex;align-items:center;gap:6px;">
+                            <span data-icon="lock" data-icon-size="14"></span>
+                            <span>نام فایل در مرجع (غیرقابل تغییر):</span>
+                        </label>
+                        <input type="text" id="editFilename" class="form-input" readonly disabled style="opacity:0.65;direction:ltr;text-align:right;">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="editTitle"><span style="color:#ef4444;margin-left:4px;font-weight:bold;">*</span>عنوان نمایشی فیلم:</label>
+                        <input type="text" id="editTitle" class="form-input" placeholder="مثال: جشن تولد علی در باغ">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="editYear"><span style="color:#ef4444;margin-left:4px;font-weight:bold;">*</span>سال ضبط فیلم:</label>
+                        <input type="text" id="editYear" class="form-input" placeholder="مثال: ۱۴۰۱ یا 2022">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="editEditorName"><span style="color:#ef4444;margin-left:4px;font-weight:bold;">*</span>نام ویرایش‌کننده این فیلم:</label>
+                        <input type="text" id="editEditorName" class="form-input" placeholder="نام شما">
+                    </div>
+
+                    <!-- Online Video Link (Moved from QR Modal) -->
+                    <div class="form-group">
+                        <label class="form-label" for="editOnlineLink" style="display:flex;align-items:center;gap:6px;">
+                            <span data-icon="link" data-icon-size="14"></span>
+                            <span>لینک آنلاین ویدئو (اختیاری جهت بارکد QR و دانلود):</span>
+                        </label>
+                        <input type="url" id="editOnlineLink" class="form-input" placeholder="https://example.com/video.mp4" style="direction:ltr;text-align:left;">
+                        <div class="form-hint">در صورت ثبت لینک، بارکد QR در پنجره اشتراک‌گذاری مستقیماً بر اساس این آدرس تولید خواهد شد.</div>
+                    </div>
+                    
+                    <!-- 11. Thumbnail Drag & Drop & Capture Box -->
+                    <div class="form-group">
+                        <label class="form-label">تصویر اولیه (تامنیل) فیلم:</label>
+                        <div id="thumbDropzone" class="thumbnail-dropzone-box" data-tooltip="برای تغییر تامنیل، تصویر را به این کادر بکشید و رها کنید (Drag & Drop)">
+                            <div id="editThumbPreviewBox" class="thumb-preview-img">
+                                <span>پیش‌فرض</span>
+                            </div>
+                            <div class="thumb-actions">
+                                <div style="font-size:0.8rem;color:#b0b0b0;margin-bottom:6px;">
+                                    تصویر را به اینجا بکشید یا از دکمه‌های زیر استفاده کنید:
+                                </div>
+                                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                    <button type="button" id="btnCaptureFrame" class="btn btn-outline" style="font-size:0.78rem;padding:6px 12px;" data-tooltip="استخراج خودکار یک فریم باکیفیت از ثانیه‌های ویدئو">
+                                        <span data-icon="camera" data-icon-size="16"></span>
+                                        <span>عکس‌برداری از فریم ویدئو</span>
+                                    </button>
+                                    <button type="button" id="btnUploadThumb" class="btn btn-outline" style="font-size:0.78rem;padding:6px 12px;" data-tooltip="انتخاب یک عکس دلخواه از حافظه دستگاه برای تامنیل">
+                                        <span data-icon="image" data-icon-size="16"></span>
+                                        <span>انتخاب تصویر از سیستم</span>
+                                    </button>
+                                </div>
+                                <input type="file" id="thumbFileInput" accept="image/*" style="display:none;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Unlimited Tagging with Live Autocomplete -->
+                    <div class="form-group">
+                        <label class="form-label">تگ‌ها و دسته‌بندی‌ها (نامحدود):</label>
+                        <div class="tags-input-container">
+                            <div id="tagsChipList" class="tags-chip-list"></div>
+                            <input type="text" id="tagInput" class="tag-field-input" placeholder="تایپ تگ جدید و فشردن Enter...">
+                            <div id="tagAutocompleteDropdown" class="tag-autocomplete-dropdown"></div>
+                        </div>
+                        <div class="form-hint">می‌توانید تگ دلخواه را تایپ کرده و Enter بزنید، یا از بین تگ‌های پیشنهادی قبلی انتخاب فرمایید.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="editDesc"><span style="color:#ef4444;margin-left:4px;font-weight:bold;">*</span>توضیحات کوتاه:</label>
+                        <textarea id="editDesc" class="form-textarea" placeholder="خاطره کوتاه یا افراد حاضر در فیلم..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" data-close-modal>
+                        <span class="btn-content">انصراف</span>
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <span class="btn-spinner"></span>
+                        <span class="btn-content">ذخیره تغییرات</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 4: Centered Luxury QR Code & Download Modal -->
+    <div id="qrModal" class="modal-overlay">
+        <div class="modal-container" style="max-width:480px;">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span data-icon="qrcode" data-icon-size="20"></span>
+                    <span>بارکد QR و لینک دانلود ویدئو</span>
+                </div>
+                <button class="modal-close-btn" data-close-modal data-tooltip="بستن">
+                    <span data-icon="close" data-icon-size="18"></span>
+                </button>
+            </div>
+            
+            <div class="modal-body qr-modal-body-centered">
+                <h4 id="qrVideoTitle" style="font-size:1.15rem;font-weight:900;text-align:center;">نام فیلم</h4>
+                
+                <!-- Centered Large QR Box -->
+                <div id="qrCodeContainer" class="qr-code-box-centered"></div>
+                
+                <p id="qrTypeNotice" style="font-size:0.8rem;color:var(--text-secondary);max-width:380px;line-height:1.6;text-align:center;">
+                    با اسکن این بارکد با دوربین گوشی موبایل، ویدئو به صورت مستقیم پخش و دانلود می‌شود.
+                </p>
+
+                <div class="qr-links-group">
+                    <!-- Active Direct / Online Link Box -->
+                    <div class="qr-link-item">
+                        <div class="qr-link-label">
+                            <span data-icon="link" data-icon-size="14"></span>
+                            <span id="qrSourceLabel">دانلود فایل:</span>
+                        </div>
+                        <div class="qr-link-url-box">
+                            <span id="qrDirectLink" class="qr-link-text"></span>
+                            <button type="button" id="btnCopyQrLink" class="btn btn-outline" style="padding:5px 10px;font-size:0.75rem;flex-shrink:0;" data-tooltip="کپی کردن آدرس لینک">
+                                <span data-icon="copy" data-icon-size="14"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer" style="justify-content:center;">
+                <a id="qrDownloadBtn" href="#" class="btn btn-primary" download style="width:100%;text-align:center;">
+                    <span data-icon="download" data-icon-size="16"></span>
+                    <span>دانلود مستقیم فایل ویدئو</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 5: Settings & Storage Analytics -->
+    <div id="settingsModal" class="modal-overlay">
+        <div class="modal-container" style="max-width:620px;">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span data-icon="settings" data-icon-size="20"></span>
+                    <span>تنظیمات و آمار فضای ذخیره‌سازی</span>
+                </div>
+                <button class="modal-close-btn" data-close-modal data-tooltip="بستن">
+                    <span data-icon="close" data-icon-size="18"></span>
+                </button>
+            </div>
+
+            <div class="modal-body" style="padding-bottom:12px;">
+                <!-- Tabs -->
+                <div class="settings-tabs">
+                    <button class="tab-btn active" data-tab="tabStats">
+                        <span data-icon="chart" data-icon-size="16"></span>
+                        <span>آمار و حافظه</span>
+                    </button>
+                    <button class="tab-btn" data-tab="tabSecurity">
+                        <span data-icon="lock" data-icon-size="16"></span>
+                        <span>تغییر رمز و مشخصات</span>
+                    </button>
+                    <button class="tab-btn" data-tab="tabLogs" id="tabBtnLogs" style="display:none;">
+                        <span data-icon="storage" data-icon-size="16"></span>
+                        <span>لاگ‌های سیستم</span>
+                    </button>
+                </div>
+
+                <!-- Tab 1: Storage & Video Stats -->
+                <div id="tabStats" class="tab-content active">
+                    <div class="stats-grid">
+                        <div class="stat-widget">
+                            <div class="stat-icon" data-icon="storage" data-icon-size="22"></div>
+                            <div>
+                                <div class="stat-title">حجم کل فضای اشغال شده</div>
+                                <div class="stat-value" id="statTotalSize">۰ مگابایت</div>
+                                <div class="stat-sub">پوشه VIDEOS و پایگاه داده</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-widget">
+                            <div class="stat-icon" data-icon="logo" data-icon-size="22"></div>
+                            <div>
+                                <div class="stat-title">تعداد کل ویدئوها</div>
+                                <div class="stat-value" id="statTotalVideos">۰</div>
+                                <div class="stat-sub">فایل‌های معتبر ویدئویی</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-widget">
+                            <div class="stat-icon" data-icon="check" data-icon-size="22"></div>
+                            <div>
+                                <div class="stat-title">ویدئوهای تکمیل شده</div>
+                                <div class="stat-value" id="statCompleteCount">۰</div>
+                                <div class="stat-sub">دارای نام، توضیحات و سال</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-widget">
+                            <div class="stat-icon" data-icon="alert" data-icon-size="22"></div>
+                            <div>
+                                <div class="stat-title">ویدئوهای بدون اطلاعات</div>
+                                <div class="stat-value" id="statIncompleteCount">۰</div>
+                                <div class="stat-sub">نیازمند ویرایش و تکمیل</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Auto-Backup Status Widget -->
+                    <div class="stat-widget" style="margin-bottom:18px;background:#101010;border:1px solid #2d2d2d;">
+                        <div class="stat-icon" data-icon="backup" data-icon-size="22"></div>
+                        <div style="flex:1;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                                <div class="stat-title" style="margin:0;font-weight:700;">سیستم پشتیبان‌گیری خودکار</div>
+                                <span style="font-size:0.72rem;background:#ffffff;color:#000000;font-weight:800;padding:2px 8px;border-radius:999px;">فعال (۱۰ دقیقه + پس از تکمیل)</span>
+                            </div>
+                            <div class="stat-sub" style="margin:0;line-height:1.5;">
+                                آخرین پشتیبان‌گیری: <strong id="lastAutoBackupTimeText" style="color:#ffffff;">در انتظار اولین پشتیبان‌گیری...</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Miscellaneous Files Section -->
+                    <div style="margin-bottom:18px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                            <span class="form-label" style="margin:0;">فایل‌های متفرقه و اضافه در پوشه VIDEOS:</span>
+                            <span id="statMiscCount" style="font-size:0.78rem;background:#262626;padding:2px 8px;border-radius:4px;">۰ فایل</span>
+                        </div>
+                        <div id="statMiscList" style="background:#0a0a0a;border:1px solid #282828;border-radius:8px;padding:10px 14px;max-height:100px;overflow-y:auto;">
+                            <span style="color:var(--text-muted);font-size:0.78rem;">در حال بررسی...</span>
+                        </div>
+                    </div>
+
+                    <!-- Tags Distribution Section -->
+                    <div>
+                        <div class="form-label" style="margin-bottom:8px;">دسته‌بندی‌ها و تگ‌های موجود (کلیک برای فیلتر):</div>
+                        <div id="statTagsList" class="tags-stats-list">
+                            <span style="color:var(--text-muted);font-size:0.78rem;">در حال بارگذاری تگ‌ها...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Change Edit Password & Editor Profile -->
+                <div id="tabSecurity" class="tab-content">
+                    <form id="changePinForm">
+                        <div class="form-group">
+                            <label class="form-label" for="changeEditorName">نام پیش‌فرض ویرایش‌کننده:</label>
+                            <input type="text" id="changeEditorName" class="form-input" placeholder="نام شما">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="changePinOld">رمز عبور فعلی:</label>
+                            <div class="password-input-group">
+                                <input type="password" id="changePinOld" class="form-input" placeholder="رمز فعلی خود را وارد کنید">
+                                <button type="button" class="btn-toggle-password" data-target="changePinOld" data-tooltip="نمایش / مخفی‌سازی رمز عبور" aria-label="نمایش رمز عبور">
+                                    <span class="eye-icon" data-icon="eye" data-icon-size="18"></span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="changePinNew">رمز عبور جدید:</label>
+                            <div class="password-input-group">
+                                <input type="password" id="changePinNew" class="form-input" placeholder="حداقل ۴ رقم" autocomplete="new-password">
+                                <button type="button" class="btn-toggle-password" data-target="changePinNew" data-tooltip="نمایش / مخفی‌سازی رمز عبور" aria-label="نمایش رمز عبور">
+                                    <span class="eye-icon" data-icon="eye" data-icon-size="18"></span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="changePinConfirm">تکرار رمز عبور جدید:</label>
+                            <div class="password-input-group">
+                                <input type="password" id="changePinConfirm" class="form-input" placeholder="تکرار رمز عبور جدید" autocomplete="new-password">
+                                <button type="button" class="btn-toggle-password" data-target="changePinConfirm" data-tooltip="نمایش / مخفی‌سازی رمز عبور" aria-label="نمایش رمز عبور">
+                                    <span class="eye-icon" data-icon="eye" data-icon-size="18"></span>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width:100%;margin-top:10px;">
+                            <span class="btn-spinner"></span>
+                            <span class="btn-content">تغییر و ذخیره رمز جدید</span>
+                        </button>
+                    </form>
+
+                    <!-- Software Maintenance / Diagnostics Mode Toggle -->
+                    <div class="maintenance-mode-card" style="margin-top:24px;border-top:1px solid #282828;padding-top:16px;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;background:#121212;border:1px solid #2a2a2a;border-radius:var(--radius-md);padding:14px 18px;">
+                            <div style="display:flex;align-items:center;gap:12px;">
+                                <span data-icon="settings" data-icon-size="20"></span>
+                                <div>
+                                    <h4 style="font-size:0.92rem;font-weight:700;margin:0 0 4px 0;color:#ffffff;">حالت تعمیر نرم‌افزار</h4>
+                                    <p style="font-size:0.75rem;color:#888888;margin:0;">فعال‌سازی ثبت رویدادها و نمایش برگه گزارش‌های سیستمی (Log)</p>
+                                </div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="toggleMaintenanceMode">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 3: System Logs & Error History -->
+                <div id="tabLogs" class="tab-content">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                        <span class="form-label" style="margin:0;">گزارش رویدادها و خطاهای ثبت‌شده:</span>
+                        <div style="display:flex;gap:8px;">
+                            <button type="button" id="btnRefreshLogs" class="btn btn-outline" style="font-size:0.75rem;padding:4px 10px;">
+                                <span class="btn-content">تازه‌سازی</span>
+                            </button>
+                            <button type="button" id="btnClearLogs" class="btn btn-outline" style="font-size:0.75rem;padding:4px 10px;">
+                                <span class="btn-content">پاک‌سازی</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="systemLogsViewer" style="background:#0a0a0a;border:1px solid #282828;border-radius:8px;padding:12px;max-height:220px;overflow-y:auto;font-family:monospace;font-size:0.75rem;color:#d1d5db;direction:ltr;text-align:left;white-space:pre-wrap;line-height:1.6;">
+                        در حال دریافت لاگ‌ها...
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+                <div style="display:flex;align-items:center;gap:12px;font-size:0.75rem;color:var(--text-muted);">
+                    <span>نسخه: <strong id="settingsVersionText" style="color:#888888;font-weight:700;">v2.5.0</strong></span>
+                    <span style="opacity:0.3;">|</span>
+                    <span style="font-family:sans-serif;letter-spacing:0.5px;color:#777777;font-size:0.72rem;direction:ltr;">DEVELOPED BY MAHDYAR SHAHPARI x Gemini - 2026</span>
+                </div>
+                <button type="button" class="btn btn-outline" data-close-modal>
+                    <span class="btn-content">بستن پنجره</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Educational Guide for Registering VIDEOS Folder -->
+    <div id="folderGuideModal" class="modal-overlay">
+        <div class="modal-container" style="max-width:540px;">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span data-icon="folder" data-icon-size="22"></span>
+                    <span>راهنمای اتصال و تایید پوشه VIDEOS</span>
+                </div>
+                <button class="modal-close-btn" data-close-modal data-tooltip="بستن">
+                    <span data-icon="close" data-icon-size="18"></span>
+                </button>
+            </div>
+            <div class="modal-body" style="padding-bottom:12px;">
+                <p style="font-size:0.88rem;color:var(--text-secondary);line-height:1.7;margin-bottom:18px;">
+                    برای مشاهده مشخصات، پخش روان و استخراج فریم‌های ویدئو در مرورگر، اتصال به پوشه فیلم‌ها الزامی است. لطفاً ۳ گام ساده زیر را انجام دهید:
+                </p>
+                <div class="guide-steps-list">
+                    <div class="guide-step-item">
+                        <div class="guide-step-num">۱</div>
+                        <div class="guide-step-text">
+                            <strong>مسیریابی به محل پروژه:</strong> در پنجره‌ای که باز می‌شود، به پوشه پروژه (کنار فایل <code>index.html</code>) بروید.
+                        </div>
+                    </div>
+                    <div class="guide-step-item">
+                        <div class="guide-step-num">۲</div>
+                        <div class="guide-step-text">
+                            <strong>انتخاب پوشه VIDEOS:</strong> روی پوشه <code>VIDEOS</code> کلیک کرده و وارد آن شوید یا آن را انتخاب فرمایید.
+                        </div>
+                    </div>
+                    <div class="guide-step-item">
+                        <div class="guide-step-num">۳</div>
+                        <div class="guide-step-text">
+                            <strong>تایید دسترسی:</strong> روی دکمه آبی‌رنگ <strong>Select Folder</strong> (یا <strong>Upload</strong>) کلیک کرده و در صورت نمایش پیام امنیتی کروم، دکمه <strong>Allow</strong> (اجازه دادن) را بزنید.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content:space-between;">
+                <button type="button" class="btn btn-outline" data-close-modal>
+                    <span class="btn-content">انصراف</span>
+                </button>
+                <button type="button" id="btnStartFolderPicker" class="btn btn-primary" style="padding:10px 22px;">
+                    <span class="btn-spinner"></span>
+                    <span class="btn-content" style="display:flex;align-items:center;gap:6px;">
+                        <span data-icon="folder" data-icon-size="18"></span>
+                        <span>شروع انتخاب پوشه VIDEOS</span>
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fullscreen Blur Validation & Loading Overlay (Minimum 500ms guaranteed) -->
+    <div id="folderValidationOverlay" class="folder-validation-overlay hidden">
+        <div class="folder-validation-card">
+            <div class="folder-validation-spinner"></div>
+            <h3 id="folderValidationTitle" style="font-size:1.05rem;font-weight:800;margin-bottom:8px;">در حال اصالت‌سنجی پوشه VIDEOS...</h3>
+            <p id="folderValidationSub" style="font-size:0.82rem;color:#a0a0a0;line-height:1.6;margin:0;">
+                تطبیق فایل‌های انتخاب‌شده با پایگاه داده سامانه
+            </p>
+        </div>
+    </div>
+
+    <!-- Fullscreen Blur Sync Overlay: Synchronization of files and data in data.json -->
+    <div id="syncProgressOverlay" class="folder-validation-overlay hidden">
+        <div class="folder-validation-card">
+            <div class="folder-validation-spinner"></div>
+            <h3 id="syncProgressTitle" style="font-size:1.05rem;font-weight:800;margin-bottom:8px;">در حال همگام‌سازی و ذخیره...</h3>
+            <p id="syncProgressSub" style="font-size:0.82rem;color:#a0a0a0;line-height:1.6;margin:0;">
+                ذخیره اطلاعات در data.json و همگام‌سازی فایل‌های پوشه مرجع در جریان است.
+            </p>
+        </div>
+    </div>
+
+    <!-- Browser Permission Arrow Guide Overlay (Pointing to Allow Prompt) -->
+    <div id="permissionGuideOverlay" class="permission-guide-overlay hidden">
+        <div class="permission-guide-backdrop"></div>
+        <div class="permission-arrow-box">
+            <div class="permission-arrow-indicator">
+                <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                    <path d="M32 54V12M16 28L32 12L48 28" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div class="permission-guide-card">
+                <div style="display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:6px;">
+                    <span data-icon="folder" data-icon-size="24"></span>
+                    <h3 style="font-size:1.05rem;font-weight:800;margin:0;">تایید اجازه دسترسی به پوشه ویدئوها</h3>
+                </div>
+                <p style="font-size:0.84rem;color:#b0b0b0;line-height:1.6;margin-bottom:12px;">
+                    مرورگر جهت امنیت، درخواست دسترسی به پوشه ویدئوها را دارد. لطفاً مانند تصویر فلش در بالای صفحه مرورگر، دکمه <strong>Allow</strong> (یا <strong>اجازه دادن</strong>) را کلیک فرمایید.
+                </p>
+                <button type="button" id="btnDismissPermissionGuide" class="btn btn-primary" style="font-size:0.8rem;padding:7px 18px;">
+                    <span class="btn-content">متوجه شدم</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Modal: Missing / Deleted Video File Handler -->
+    <div id="missingFileModal" class="modal-overlay">
+        <div class="modal-container" style="max-width:520px;">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span data-icon="alert" data-icon-size="22" style="color:#ef4444;"></span>
+                    <span>فایل ویدئویی در پوشه یافت نشد</span>
+                </div>
+                <button class="modal-close-btn" data-close-modal data-tooltip="بستن">
+                    <span data-icon="close" data-icon-size="18"></span>
+                </button>
+            </div>
+            <div class="modal-body" style="padding-bottom:14px;">
+                <p style="font-size:0.9rem;color:#ffffff;line-height:1.7;margin-bottom:12px;">
+                    فایل ویدئویی <code id="missingFileName" style="color:#ef4444;background:#1a1a1a;padding:2px 8px;border-radius:4px;font-family:monospace;direction:ltr;display:inline-block;">...</code> قبلاً در سامانه ثبت شده بود، اما اکنون در پوشه <code>VIDEOS</code> موجود نیست و حذف شده است.
+                </p>
+                <p style="font-size:0.84rem;color:var(--text-secondary);line-height:1.7;margin-bottom:6px;">
+                    آیا تمایل دارید مشخصات، تگ‌ها و کارت این فیلم به کلی از سامانه حذف شود؟
+                </p>
+            </div>
+            <div class="modal-footer" style="justify-content:space-between;gap:12px;">
+                <button type="button" id="btnKeepMissingFile" class="btn btn-outline" style="flex:1;">
+                    <span class="btn-content">خیر، اطلاعات باقی بماند</span>
+                </button>
+                <button type="button" id="btnDeleteMissingFile" class="btn btn-primary" style="flex:1;background:#ef4444;border-color:#ef4444;color:#ffffff;">
+                    <span class="btn-content">بله، حذف اطلاعات</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Advanced Multi-Type Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- JavaScript Files -->
+    <script src="code/js/data_bundle.js"></script>
+    <script src="code/js/icons.js"></script>
+    <script src="code/js/qrcode.js"></script>
+    <script src="code/js/app.js"></script>
+</body>
+</html>

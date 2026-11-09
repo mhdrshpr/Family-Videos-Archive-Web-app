@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پلیر سینمایی - خانواده من</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/player.css">
+    <script src="js/logger.js"></script>
+</head>
+<body class="player-page">
+
+    <!-- Mobile Portrait Orientation Warning Overlay (Enforces Landscape Only) -->
+    <div id="orientationWarning" class="orientation-warning">
+        <div class="orientation-icon-box" data-icon="rotate" data-icon-size="44"></div>
+        <h2>لطفاً گوشی را بچرخانید</h2>
+        <p>
+            برای تماشای بهینه ویدئوها در حالت سینمایی و کنترل کامل امکانات پلیر، لطفاً صفحه گوشی خود را به حالت افقی (Landscape) بچرخانید.
+        </p>
+    </div>
+
+    <!-- Master Cinema Player Container -->
+    <div id="playerContainer" class="player-container">
+
+        <!-- HTML5 Video Element with Wide Codec Fallback -->
+        <video id="playerVideo" class="player-video" playsinline preload="auto">
+            متاسفانه مرورگر شما از پخش مستقیم این ویدئو پشتیبانی نمی‌کند.
+        </video>
+
+        <!-- Unsupported Codec / Error Banner -->
+        <div id="codecErrorNotice" style="display:none;position:absolute;z-index:25;background:rgba(20,20,20,0.95);border:1px solid #444;border-radius:12px;padding:24px 30px;text-align:center;max-width:480px;flex-direction:column;align-items:center;gap:14px;box-shadow:0 10px 40px rgba(0,0,0,0.9);">
+            <div data-icon="alert" data-icon-size="36" style="color:#ffffff;"></div>
+            <h3 style="font-size:1.1rem;font-weight:700;">عدم پشتیبانی مرورگر از کدک این فایل</h3>
+            <p style="font-size:0.84rem;color:#b0b0b0;line-height:1.6;">
+                این ویدئو از فرمت یا کدکی استفاده می‌کند که مرورگر وب به صورت مستقیم امکان رمزگشایی آن را ندارد. می‌توانید فایل را مستقیماً دانلود نموده و با نرم‌افزارهایی مانند VLC یا KMPlayer مشاهده فرمایید.
+            </p>
+            <a id="codecDownloadBtn" href="#" download class="btn btn-primary" style="margin-top:6px;">
+                <span data-icon="download" data-icon-size="16"></span>
+                <span>دانلود مستقیم فایل ویدئو</span>
+            </a>
+        </div>
+
+        <!-- Center Big Play/Pause Indicator Animation -->
+        <div id="centerIndicator" class="center-play-indicator"></div>
+
+        <!-- Left Seek Zone (-10s) -->
+        <div id="seekZoneLeft" class="seek-zone seek-zone-left">
+            <div id="leftRipple" class="seek-ripple">
+                <span data-icon="replay10" data-icon-size="32"></span>
+                <span>۱۰- ثانیه</span>
+            </div>
+        </div>
+
+        <!-- Right Seek Zone (+10s) -->
+        <div id="seekZoneRight" class="seek-zone seek-zone-right">
+            <div id="rightRipple" class="seek-ripple">
+                <span data-icon="forward10" data-icon-size="32"></span>
+                <span>۱۰+ ثانیه</span>
+            </div>
+        </div>
+
+        <!-- Top Information Header -->
+        <header class="player-top-bar">
+            <div class="player-meta">
+                <div class="player-title-row">
+                    <span id="playerTitle" class="player-title">در حال بارگذاری...</span>
+                    <span id="playerYear" class="player-year-tag" style="display:none;"></span>
+                </div>
+                <div id="playerFilename" style="font-size:0.75rem;color:#888888;font-family:monospace;direction:ltr;text-align:right;"></div>
+                <div id="playerTags" class="player-tags" style="display:none;"></div>
+                <div id="playerDesc" class="player-desc"></div>
+            </div>
+
+            <div class="player-top-actions">
+                <button id="btnOpenPlayerChoice" class="ctrl-btn" data-tooltip="انتخاب نحوه پخش و پلیر (سینمایی / خام مرورگر / VLC)">
+                    <span data-icon="settings" data-icon-size="20"></span>
+                </button>
+                <button class="ctrl-btn" onclick="window.close()" data-tooltip="بستن این برگه پلیر">
+                    <span data-icon="close" data-icon-size="22"></span>
+                </button>
+                <a href="index.html" class="ctrl-btn" data-tooltip="بازگشت به صفحه اصلی">
+                    <span data-icon="back" data-icon-size="22"></span>
+                </a>
+            </div>
+        </header>
+
+        <!-- Bottom Controls Bar -->
+        <footer class="player-bottom-bar">
+            <!-- Timeline Seekbar -->
+            <div id="progressContainer" class="progress-container">
+                <div class="progress-track">
+                    <div id="progressBuffer" class="progress-buffer"></div>
+                    <div id="progressFilled" class="progress-filled"></div>
+                    <div id="progressThumb" class="progress-thumb"></div>
+                </div>
+                <div id="seekHoverTip" class="seek-hover-tip">00:00</div>
+            </div>
+
+            <!-- Controls Row -->
+            <div class="controls-row">
+                <!-- Left Control Group -->
+                <div class="controls-left">
+                    <button id="btnPrev" class="ctrl-btn" data-tooltip="فیلم قبلی (کلید P)">
+                        <span data-icon="prev" data-icon-size="22"></span>
+                    </button>
+
+                    <button id="playPauseBtn" class="ctrl-btn play-pause-btn" data-tooltip="پخش / توقف (Space)">
+                        <span id="playPauseIcon" data-icon="play" data-icon-size="24"></span>
+                    </button>
+
+                    <button id="btnNext" class="ctrl-btn" data-tooltip="فیلم بعدی (کلید N)">
+                        <span data-icon="next" data-icon-size="22"></span>
+                    </button>
+
+                    <div class="volume-group">
+                        <button id="btnVolume" class="ctrl-btn" data-tooltip="قطع / وصل صدا (کلید M)">
+                            <span data-icon="volumeHigh" data-icon-size="20"></span>
+                        </button>
+                        <div class="volume-slider-box">
+                            <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.05" value="1">
+                        </div>
+                    </div>
+
+                    <div class="time-display">
+                        <span id="currentTime">00:00</span> / <span id="totalTime">00:00</span>
+                    </div>
+                </div>
+
+                <!-- Right Control Group -->
+                <div class="controls-right">
+                    <button id="btnSpeedMinus" class="ctrl-btn" data-tooltip="کاهش سرعت پخش (-0.25x)">
+                        <span style="font-weight:800;font-size:1.1rem;line-height:1;">-</span>
+                    </button>
+
+                    <div class="speed-menu-wrapper">
+                        <button id="btnSpeed" class="speed-badge-btn" data-tooltip="تنظیم سرعت پخش ویدئو">
+                            <span id="speedText">1.0x</span>
+                        </button>
+                        <div id="speedDropdown" class="speed-dropdown">
+                            <button class="speed-item" data-speed="0.25">0.25x</button>
+                            <button class="speed-item" data-speed="0.5">0.5x</button>
+                            <button class="speed-item" data-speed="0.75">0.75x</button>
+                            <button class="speed-item active" data-speed="1.0">1.0x (عادی)</button>
+                            <button class="speed-item" data-speed="1.25">1.25x</button>
+                            <button class="speed-item" data-speed="1.5">1.5x</button>
+                            <button class="speed-item" data-speed="2.0">2.0x</button>
+                        </div>
+                    </div>
+
+                    <button id="btnSpeedPlus" class="ctrl-btn" data-tooltip="افزایش سرعت پخش (+0.25x)">
+                        <span style="font-weight:800;font-size:1.1rem;line-height:1;">+</span>
+                    </button>
+
+                    <button id="btnFullscreen" class="ctrl-btn" data-tooltip="تمام صفحه (کلید F)">
+                        <span data-icon="fullscreen" data-icon-size="20"></span>
+                    </button>
+                </div>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Floating Button to Return to Cinema Player from Native Browser Mode -->
+    <button id="floatingBackToCinema" class="floating-back-to-cinema-btn">
+        <span data-icon="play" data-icon-size="18"></span>
+        <span>بازگشت به پلیر سینمایی</span>
+    </button>
+
+    <!-- Modal: Select Playback Engine / External Player -->
+    <div id="playerChoiceModal" class="modal-overlay">
+        <div class="modal-container" style="max-width:580px;">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span data-icon="play" data-icon-size="22"></span>
+                    <span>انتخاب نحوه پخش و پلیر</span>
+                </div>
+                <button class="modal-close-btn" id="btnCloseChoiceModal" data-tooltip="بستن پنجره و ادامه در پلیر سینمایی">
+                    <span data-icon="close" data-icon-size="18"></span>
+                </button>
+            </div>
+            <div class="modal-body" style="padding-bottom:14px;">
+                <p style="font-size:0.86rem;color:var(--text-secondary);line-height:1.6;margin-bottom:16px;">
+                    ویدئوی در حال پخش: <strong id="choiceVideoName" style="color:#ffffff;">...</strong><br>
+                    لطفاً نحوه پخش یا نرم‌افزار مورد نظر جهت مشاهده این فیلم را انتخاب فرمایید:
+                </p>
+
+                <div class="player-choices-grid">
+                    <!-- Choice 1: Cinema Custom Player (خانواده من) -->
+                    <div id="btnChoiceCinema" class="player-choice-card active-choice">
+                        <div class="choice-icon-badge">
+                            <span data-icon="play" data-icon-size="24"></span>
+                        </div>
+                        <div class="choice-info">
+                            <div class="choice-title-row">
+                                <h4>پلیر اختصاصی خانواده من (پیش‌فرض)</h4>
+                                <span class="choice-recommended-badge">پیشنهادی</span>
+                            </div>
+                            <p class="choice-desc">محیط سینمایی تیره، کنترل روان زمان و پرش ۱۰± ثانیه دوبل کلیک، تنظیم سرعت، زیرنویس و آمار</p>
+                        </div>
+                    </div>
+
+                    <!-- Choice 2: Raw Browser Player (HTML5 controls) -->
+                    <div id="btnChoiceBrowserNative" class="player-choice-card">
+                        <div class="choice-icon-badge">
+                            <span data-icon="monitor" data-icon-size="24"></span>
+                        </div>
+                        <div class="choice-info">
+                            <h4>پلیر خام مرورگر (Native Controls)</h4>
+                            <p class="choice-desc">پخش مستقیم با کنترل‌های ساده و استاندارد خود مرورگر (مناسب جهت هماهنگی با پردازشگر گرافیکی)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- External Player & Download Section -->
+                <div style="margin-top:20px;border-top:1px solid #2a2a2a;padding-top:14px;">
+                    <h5 style="font-size:0.84rem;color:#b0b0b0;margin-bottom:10px;font-weight:700;">پخش در نرم‌افزارهای خارجی یا دانلود فایل:</h5>
+                    <div class="external-apps-grid">
+                        <!-- VLC -->
+                        <button type="button" id="btnLaunchVLC" class="btn-external-player" data-tooltip="پخش مستقیم در نرم‌افزار VLC Media Player">
+                            <span class="ext-name">VLC Player</span>
+                            <span class="ext-tag">پخش در VLC</span>
+                        </button>
+
+                        <!-- KMPlayer -->
+                        <button type="button" id="btnLaunchKMPlayer" class="btn-external-player" data-tooltip="پخش مستقیم در نرم‌افزار KMPlayer">
+                            <span class="ext-name">KMPlayer</span>
+                            <span class="ext-tag">پخش در KMPlayer</span>
+                        </button>
+
+                        <!-- Windows Player -->
+                        <button type="button" id="btnLaunchWindowsPlayer" class="btn-external-player" data-tooltip="پخش در مدیاپلیر اصلی ویندوز (Windows Media Player)">
+                            <span class="ext-name">Windows Player</span>
+                            <span class="ext-tag">پلیر ویندوز</span>
+                        </button>
+
+                        <!-- Direct Download -->
+                        <button type="button" id="btnDownloadVideo" class="btn-external-player" data-tooltip="دانلود مستقیم فایل اصلی ویدئو">
+                            <span class="ext-name">دانلود فایل</span>
+                            <span class="ext-tag">ذخیره روی حافظه</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer" style="justify-content:space-between;">
+                <button type="button" id="btnChoiceDismiss" class="btn btn-outline">
+                    <span class="btn-content">ادامه با پلیر سینمایی</span>
+                </button>
+                <button type="button" id="btnConfirmChoice" class="btn btn-primary" style="padding:10px 24px;">
+                    <span class="btn-content">تایید و شروع پخش</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Files -->
+    <script src="js/data_bundle.js"></script>
+    <script src="js/icons.js"></script>
+    <script src="js/player.js"></script>
+</body>
+</html>

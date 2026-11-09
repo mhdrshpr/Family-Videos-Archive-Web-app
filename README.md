@@ -3,13 +3,13 @@
 
 <div align="center">
 
-[![Version](https://img.shields.io/badge/version-v2.5.0-000000?style=for-the-badge&logo=git&logoColor=white)](https://github.com)
-[![License: MIT](https://img.shields.io/badge/License-MIT-ffffff?style=for-the-badge&logoColor=black&labelColor=000000)](LICENSE)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-000000?style=for-the-badge&logo=linux&logoColor=white)](https://github.com)
-[![Offline](https://img.shields.io/badge/100%25-Offline%20%26%20Portable-000000?style=for-the-badge&logo=speedtest&logoColor=white)](https://github.com)
-[![Dependencies](https://img.shields.io/badge/Dependencies-0%20(Vanilla%20JS)-ffffff?style=for-the-badge&labelColor=000000)](https://github.com)
-[![Design](https://img.shields.io/badge/Design-Luxury%20Monochrome-000000?style=for-the-badge)](https://github.com)
-[![Language](https://img.shields.io/badge/Language-Persian%20%7C%20فارسی-000000?style=for-the-badge)](https://github.com)
+[![Version](https://img.shields.io/badge/Version-v2.5.0-black?style=flat-square&logo=git&logoColor=white)](#)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=flat-square&logo=opensourceinitiative&logoColor=white)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-black?style=flat-square&logo=linux&logoColor=white)](#)
+[![Offline](https://img.shields.io/badge/Offline-100%25%20Portable-success?style=flat-square&logo=speedtest&logoColor=white)](#)
+[![Dependencies](https://img.shields.io/badge/Dependencies-Zero%20(Vanilla)-orange?style=flat-square&logo=javascript&logoColor=white)](#)
+[![Design](https://img.shields.io/badge/Design-Luxury%20Monochrome-black?style=flat-square&logo=sketch&logoColor=white)](#)
+[![Language](https://img.shields.io/badge/Language-Persian%20%7C%20فارسی-red?style=flat-square&logo=googletranslate&logoColor=white)](#)
 
 </div>
 
@@ -51,12 +51,12 @@
 
 <div align="center">
 
-![HTML5](https://img.shields.io/badge/HTML5-000000?style=flat-square&logo=html5&logoColor=white)
-![CSS3](https://img.shields.io/badge/CSS3-000000?style=flat-square&logo=css3&logoColor=white)
-![JavaScript](https://img.shields.io/badge/ES6%2B%20Vanilla%20JavaScript-000000?style=flat-square&logo=javascript&logoColor=white)
-![Chrome](https://img.shields.io/badge/Optimized%20for-Google%20Chrome-000000?style=flat-square&logo=google-chrome&logoColor=white)
-![Local Storage](https://img.shields.io/badge/Storage-JSON%20%2B%20LocalStorage-000000?style=flat-square)
-![Typography](https://img.shields.io/badge/Font-Yekan%20Bakh-000000?style=flat-square)
+[![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white)](#)
+[![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white)](#)
+[![JavaScript](https://img.shields.io/badge/JavaScript-ES6%2B%20Vanilla-F7DF1E?style=flat-square&logo=javascript&logoColor=black)](#)
+[![Google Chrome](https://img.shields.io/badge/Browser-Google%20Chrome-4285F4?style=flat-square&logo=googlechrome&logoColor=white)](#)
+[![Storage](https://img.shields.io/badge/Storage-JSON%20%2B%20LocalStorage-333333?style=flat-square&logo=json&logoColor=white)](#)
+[![Typography](https://img.shields.io/badge/Typography-Yekan%20Bakh-555555?style=flat-square)](#)
 
 </div>
 
@@ -104,11 +104,22 @@
 
 ---
 
-## 🏷️ برچسب‌ها و کلمات کلیدی (GitHub Topics)
+## 🏷️ برچسب‌ها و موضوعات مخزن (GitHub Topics)
 
-```text
-family-archive, cinema-player, portable-app, external-hdd, ssd-archive, offline-video-player, vanilla-javascript, persian-ui, zero-dependencies, dark-mode, file-system-access-api, family-memories
-```
+<div align="center">
+
+[![Family Archive](https://img.shields.io/badge/topic-family--archive-111111?style=flat-square)](#)
+[![Cinema Player](https://img.shields.io/badge/topic-cinema--player-111111?style=flat-square)](#)
+[![Portable App](https://img.shields.io/badge/topic-portable--app-111111?style=flat-square)](#)
+[![External HDD](https://img.shields.io/badge/topic-external--hdd-111111?style=flat-square)](#)
+[![SSD Archive](https://img.shields.io/badge/topic-ssd--archive-111111?style=flat-square)](#)
+[![Offline Player](https://img.shields.io/badge/topic-offline--video--player-111111?style=flat-square)](#)
+[![Vanilla JS](https://img.shields.io/badge/topic-vanilla--javascript-111111?style=flat-square)](#)
+[![Persian UI](https://img.shields.io/badge/topic-persian--ui-111111?style=flat-square)](#)
+[![Zero Dependencies](https://img.shields.io/badge/topic-zero--dependencies-111111?style=flat-square)](#)
+[![Dark Mode](https://img.shields.io/badge/topic-dark--mode-111111?style=flat-square)](#)
+
+</div>
 
 ---
 
@@ -118,7 +129,7 @@ family-archive, cinema-player, portable-app, external-hdd, ssd-archive, offline-
 
 <div align="center">
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-black.svg?style=for-the-badge)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=flat-square&logo=opensourceinitiative&logoColor=white)](LICENSE)
 
 **توسعه‌یافته با همکاری `MAHDYAR SHAHPARI x Gemini - 2026`**
 

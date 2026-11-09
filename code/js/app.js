@@ -13,7 +13,7 @@
 (function() {
     'use strict';
 
-    var APP_VERSION = '2.6.0';
+    var APP_VERSION = '2.6.2';
     var STORAGE_DATA_KEY = 'family_pics_database';
     var STORAGE_AUTH_KEY = 'family_pics_master_pin';
     var STORAGE_USER_KEY = 'family_pics_editor_name';
@@ -1210,16 +1210,25 @@
                 }
             }
 
+            var videoExtensions = ['.mp4', '.mkv', '.webm', '.mov', '.avi', '.m4v', '.wmv', '.flv'];
+            var isInitialSetup = (appState.videos.length === 0);
             var isMatch = false;
-            if (appState.videos.length > 0) {
-                isMatch = appState.videos.some(function(v) {
-                    return foundNames.indexOf(v.filename) !== -1;
-                });
-            } else {
-                var videoExtensions = ['.mp4', '.mkv', '.webm', '.mov', '.avi'];
-                isMatch = foundNames.some(function(n) {
+
+            if (isInitialSetup) {
+                // مسیر اختصاصی برای تعریف اولیه پوشه VIDEOS (خام/فکتوری ریست)
+                var folderName = (dirHandle.name || '').trim().toLowerCase();
+                var hasVideoFiles = foundNames.some(function(n) {
                     var l = n.toLowerCase();
                     return videoExtensions.some(function(ext) { return l.endsWith(ext); });
+                });
+
+                // تایید اصالت: تطبیق نام پوشه VIDEOS یا وجود فایل‌های ویدیویی (حتی در صورت خالی بودن پوشه تازه)
+                if (folderName === 'videos' || hasVideoFiles || foundNames.length === 0) {
+                    isMatch = true;
+                }
+            } else {
+                isMatch = appState.videos.some(function(v) {
+                    return foundNames.indexOf(v.filename) !== -1;
                 });
             }
 
@@ -1234,10 +1243,34 @@
                 appState.dirHandle = dirHandle;
                 sessionStorage.setItem('family_pics_folder_verified', 'true');
                 setFolderVerificationUI(true);
-                showToast('پوشه VIDEOS با موفقیت تایید و متصل گردید.', 'success');
-                await hideOverlaySmoothly(overlay);
-                // Stage 3: Load videos first, then fetch fresh data from data.json
-                loadVideosAndFetchDataJson(dirHandle);
+
+                if (isInitialSetup) {
+                    // فرآیند همگام‌سازی اولیه و ذخیره دیتای نو در دیتابیس
+                    var newCount = await scanEntriesFromHandle(dirHandle);
+                    var payload = {
+                        systemName: appState.systemName,
+                        version: appState.version,
+                        masterPassword: appState.masterPassword,
+                        defaultEditorName: appState.defaultEditorName,
+                        lastUpdated: new Date().toISOString(),
+                        videos: appState.videos
+                    };
+                    saveDatabaseLocally();
+                    await saveDataToJsonFile(payload);
+                    render();
+                    fetchStorageStats();
+                    await hideOverlaySmoothly(overlay);
+
+                    if (newCount > 0) {
+                        showToast('پوشه VIDEOS به عنوان پوشه مرجع اولیه تایید و ' + newCount + ' ویدئو همگام‌سازی شد.', 'success');
+                    } else {
+                        showToast('پوشه VIDEOS به عنوان پوشه مرجع اولیه تایید شد. ویدئوهای قرار گرفته در آن شناسایی خواهند شد.', 'info');
+                    }
+                } else {
+                    showToast('پوشه VIDEOS با موفقیت تایید و متصل گردید.', 'success');
+                    await hideOverlaySmoothly(overlay);
+                    loadVideosAndFetchDataJson(dirHandle);
+                }
             } else {
                 setFolderVerificationUI(false);
                 showToast('خطا: پوشه انتخاب‌شده حاوی فایل‌های ویدیویی این سامانه نیست! لطفاً پوشه VIDEOS کنار پروژه را انتخاب فرمایید.', 'error');
@@ -1266,16 +1299,25 @@
                 appState.videoBlobs[f.name] = bUrl;
             }
 
+            var videoExtensions = ['.mp4', '.mkv', '.webm', '.mov', '.avi', '.m4v', '.wmv', '.flv'];
+            var isInitialSetup = (appState.videos.length === 0);
             var isMatch = false;
-            if (appState.videos.length > 0) {
-                isMatch = appState.videos.some(function(v) {
-                    return foundNames.indexOf(v.filename) !== -1;
-                });
-            } else {
-                var videoExtensions = ['.mp4', '.mkv', '.webm', '.mov', '.avi'];
-                isMatch = foundNames.some(function(n) {
+
+            if (isInitialSetup) {
+                var hasVideoFiles = foundNames.some(function(n) {
                     var l = n.toLowerCase();
                     return videoExtensions.some(function(ext) { return l.endsWith(ext); });
+                });
+                var isVideosFolder = Array.from(files).some(function(f) {
+                    var path = (f.webkitRelativePath || '').toLowerCase();
+                    return path.indexOf('videos') !== -1;
+                });
+                if (isVideosFolder || hasVideoFiles || files.length === 0) {
+                    isMatch = true;
+                }
+            } else {
+                isMatch = appState.videos.some(function(v) {
+                    return foundNames.indexOf(v.filename) !== -1;
                 });
             }
 
@@ -1288,6 +1330,19 @@
                 sessionStorage.setItem('family_pics_folder_verified', 'true');
                 handleFolderFiles(files);
                 setFolderVerificationUI(true);
+
+                if (isInitialSetup) {
+                    var payload = {
+                        systemName: appState.systemName,
+                        version: appState.version,
+                        masterPassword: appState.masterPassword,
+                        defaultEditorName: appState.defaultEditorName,
+                        lastUpdated: new Date().toISOString(),
+                        videos: appState.videos
+                    };
+                    saveDataToJsonFile(payload);
+                }
+
                 showToast('پوشه VIDEOS با موفقیت تایید و متصل گردید.', 'success');
                 await hideOverlaySmoothly(overlay);
             } else {
@@ -1392,13 +1447,36 @@
                     if (handle) {
                         var perm = await handle.queryPermission({ mode: 'read' });
                         if (perm === 'granted') {
-                            for await (var entry of handle.values()) {
-                                if (entry.kind === 'file') {
-                                    if (appState.videos.some(function(v) { return v.filename === entry.name; })) {
-                                        isConnected = true;
-                                        appState.dirHandle = handle;
-                                        sessionStorage.setItem('family_pics_folder_verified', 'true');
-                                        break;
+                            if (appState.videos.length === 0) {
+                                // در حالت دیتای خام و اولیه، تایید بر اساس نام پوشه VIDEOS یا پسوند فایل‌های ویدیویی
+                                var hName = (handle.name || '').trim().toLowerCase();
+                                if (hName === 'videos') {
+                                    isConnected = true;
+                                    appState.dirHandle = handle;
+                                    sessionStorage.setItem('family_pics_folder_verified', 'true');
+                                } else {
+                                    var vExts = ['.mp4', '.mkv', '.webm', '.mov', '.avi', '.m4v', '.wmv', '.flv'];
+                                    for await (var entry of handle.values()) {
+                                        if (entry.kind === 'file') {
+                                            var lName = entry.name.toLowerCase();
+                                            if (vExts.some(function(ext) { return lName.endsWith(ext); })) {
+                                                isConnected = true;
+                                                appState.dirHandle = handle;
+                                                sessionStorage.setItem('family_pics_folder_verified', 'true');
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                for await (var entry of handle.values()) {
+                                    if (entry.kind === 'file') {
+                                        if (appState.videos.some(function(v) { return v.filename === entry.name; })) {
+                                            isConnected = true;
+                                            appState.dirHandle = handle;
+                                            sessionStorage.setItem('family_pics_folder_verified', 'true');
+                                            break;
+                                        }
                                     }
                                 }
                             }

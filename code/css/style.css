@@ -1767,10 +1767,10 @@ mark.search-highlight {
     display: none !important;
 }
 
-/* Arrow pointer to reference folder button when unassigned */
+/* Arrow pointer to reference folder button when unassigned (Above button pointing down) */
 .folder-register-arrow-tip {
     position: absolute;
-    top: calc(100% + 12px);
+    bottom: calc(100% + 14px);
     right: 50%;
     transform: translateX(50%);
     background: #000000;
@@ -1786,32 +1786,23 @@ mark.search-highlight {
     white-space: nowrap;
     z-index: 2000;
     box-shadow: 0 8px 28px rgba(0, 0, 0, 0.95);
-    animation: arrowBounceUp 1.2s infinite ease-in-out alternate;
+    animation: arrowBounceDown 1.2s infinite ease-in-out alternate;
 }
 
 .folder-register-arrow-tip::before {
     content: '';
     position: absolute;
-    top: -7px;
+    bottom: -7px;
     right: calc(50% - 6px);
     width: 0;
     height: 0;
     border-left: 6px solid transparent;
     border-right: 6px solid transparent;
-    border-bottom: 7px solid #ffffff;
+    border-top: 7px solid #ffffff;
 }
 
 .folder-register-arrow-tip.hidden {
     display: none !important;
-}
-
-@keyframes arrowBounceUp {
-    from {
-        transform: translate(50%, 0);
-    }
-    to {
-        transform: translate(50%, -6px);
-    }
 }
 
 /* Toggle Switch Component (Maintenance Mode) */

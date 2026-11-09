@@ -93,7 +93,7 @@ def sync_videos_folder():
 
     data = {
         "systemName": "خانواده من",
-        "version": "2.6.0",
+        "version": "2.6.2",
         "masterPassword": "1234",
         "defaultEditorName": "مدیر سیستم",
         "videos": []
@@ -321,7 +321,7 @@ class RangeHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             try:
                 clean_data = {
                     "systemName": "خانواده من",
-                    "version": "2.6.0",
+                    "version": "2.6.2",
                     "masterPassword": "1234",
                     "defaultEditorName": "مدیر سیستم",
                     "videos": []

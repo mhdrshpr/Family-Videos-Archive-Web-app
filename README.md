@@ -3,7 +3,7 @@
 
 <div align="center">
 
-[![Version](https://img.shields.io/badge/Version-v2.6.0-black?style=flat-square&logo=git&logoColor=white)](#)
+[![Version](https://img.shields.io/badge/Version-v2.6.2-black?style=flat-square&logo=git&logoColor=white)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=flat-square&logo=opensourceinitiative&logoColor=white)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-black?style=flat-square&logo=linux&logoColor=white)](#)
 [![Offline](https://img.shields.io/badge/Offline-100%25%20Portable-success?style=flat-square&logo=speedtest&logoColor=white)](#)
